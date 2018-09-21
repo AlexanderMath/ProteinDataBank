@@ -1,34 +1,66 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.preprocessing import LabelEncoder
 
-f = open("5wa1.pdb", "r")
-raw = f.read()
-lines = raw.split("\n")
+# https://rasbt.github.io/biopandas/tutorials/Working_with_PDB_Structures_in_DataFrames/
+# super nice piece of code 
+from biopandas.pdb import PandasPdb
+import time
 
-before_part = "ATOM   1932  CG  HIS A 249     "
-part = "-40.116   6.006   2.804"
+"""
+	Input: 	Pandas PDB dataframe
+	Output: One hot encoding of Amino Acid Residues and xyz position of atoms
+"""
+def get_axyz(pdb):
+	amino_acids = pdb.df['ATOM']['residue_name']
+	x = ppdb.df['ATOM']['x_coord']
+	y = ppdb.df['ATOM']['y_coord']
+	z = ppdb.df['ATOM']['z_coord']
 
-# find first occurence of atom and last one
-atoms = []
-for i, line in enumerate(lines): 
-	if "ATOM" == "".join(list(line)[:4]): 
-		line = "".join(list(line)[len(before_part): len(before_part) + len(part)]).split(" ")
-		nums = [float(f) for f in line if f != ""]
-		atoms.append(nums)
+	lc = LabelEncoder()
+	amino_acids = lc.fit_transform(amino_acids) # one_hot encoding
+	
+	return amino_acids, x, y, z
 
-atoms = np.array(atoms)
-print(atoms.shape)
-# add amino acid colors. 
+# Plot protein atom by atom. 
+def plot_atoms(ppdb):
+	fig = plt.figure(figsize=(10, 6))
+	ax_atoms 		= fig.add_subplot(1, 1, 1, projection='3d')
 
+	amino_acids, x, y, z = get_axyz(ppdb)
+	ax_atoms.scatter(x, y, z, 'o', alpha=0.3)
+	plt.show()
 
-fig = plt.figure()
-ax = Axes3D(fig)
-
-ax.plot(atoms[:, 0], atoms[:, 1], atoms[:, 2])
-ax.scatter(atoms[:, 0], atoms[:, 1], atoms[:, 2], 'o')
-plt.show()
-
+def plot_atoms_interactive(pdb, ax_atoms):
+	ax_atoms.cla()
+	amino_acids, x, y, z = get_axyz(ppdb)
+	ax_atoms.scatter(x, y, z, 'o', alpha=0.3)
+	plt.show()
 
 	
+if __name__ == "__main__":
+	save_path 	= "proteins/"
+	protein_ids = ['5WA1', '5WFL', '5WFV', '5WG1'] # find more at www.rcbs.org
 
+
+	plt.ion()
+	fig 		= plt.figure(figsize=(10, 6))
+	ax_atoms 	= fig.add_subplot(1, 1, 1, projection='3d')
+	count = 0
+		
+	while True: 
+		print("\r[%i / %i]\tCurrent Protein ID: \t%s"%(count+1, len(protein_ids), protein_ids[count]), end="")
+		ppdb = PandasPdb()
+		ppdb = ppdb.read_pdb(save_path + protein_ids[count] + '.pdb')
+		plot_atoms_interactive(ppdb, ax_atoms)
+		plt.pause(1)
+		count += 1
+		count = count % len(protein_ids)
+
+# TODO:
+# 1. Draw amino acids
+# 2. Draw by atom with (1) colors for atoms AND (2) colors for amino acids. 
+# 3. Make drawing look nice, similar to what other softwares do. 
+#	 Introduce different fidelities/speeds to draw, to allow interactive drawing when 
+# 	 training e.g. a generative adversarial network. 

@@ -1,0 +1,11 @@
+pip install biopandas
+
+
+
+
+
+
+# if download manually from www.rcbs.org Java needs to be installed.
+# highly recommend using biopandas instead, it downloads by simple ppdb.fet_pdb("id")
+sudo apt-get install jdk
+sudo apt-get install icedtea-netx # installs java web view as 'javaws'

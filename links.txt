@@ -1,0 +1,10 @@
+https://towardsdatascience.com/the-worlds-first-protein-database-for-machine-learning-and-ai-f9fe4ee0084c
+
+https://peptone.io/dspp/download
+
+http://www.rcsb.org/
+
+https://github.com/PeptoneInc/dspp-keras
+
+
+look into 3d convolutional neural networks, this seems to be where everything is at. 
