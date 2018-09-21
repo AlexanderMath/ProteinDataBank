@@ -1,6 +1,9 @@
 pip install biopandas
-pip install scrapy
+pip install nglview # see https://github.com/arose/nglview
+pip install pytraj
 
+
+# Enable nglview jupyter-nbextension enable nglview --py --sys-prefix
 
 
 
