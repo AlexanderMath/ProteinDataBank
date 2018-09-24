@@ -19,59 +19,80 @@ refl_count	= []
 protein_atoms = []
 
 for i, protein in enumerate(proteins): 
-	f = open("proteins/" + protein, 'r')
-	lines = f.read().split("\n")
-	num = int(lines[0][start: stop])
+	try: 
+		f = open("proteins/" + protein, 'r')
+		lines = f.read().split("\n")
+		num = int(lines[0][start: stop])
+	except:
+		print("Coudlnt' read file: ", protein)
+		continue
 	
 	for j, line in enumerate(lines): 
-		if "TEMPERATURE           (KELVIN)" in line: 
-			temperature_place = "".join(list(line.split(":")[1])[1:4]) # can be NUL
-			if temperature_place != "NUL": 
-				temperature.append(int(temperature_place))
-
-		if "PH                             : " in line: 
-			ph_place = "".join(list(line.split(":")[1])[1:4]) # can be NUL
-			if ph_place != "NUL" and ph_place != "APP":  # NULL or APPROX, not sure what last means. 
-				ph.append(float(ph_place))
-
 	
-		if "RESOLUTION RANGE HIGH (ANGSTROMS) : " in line: 
-			place = "".join(list(line.split(" :")[1])[1:5])
-			res_low.append(float(place))
+		try: 
 
-		if "RESOLUTION RANGE LOW  (ANGSTROMS) : " in line: 
-			place = "".join(list(line.split(" :")[1])[1:5])
-			if place != "NULL": 
-				res_high.append(float(place))
 
-		if "REMARK   3   COMPLETENESS FOR RANGE        (%) : " in line: 
-			place = "".join(list(line.split(" :")[1])[1:5])
-			if place != "NULL": 
-				res_compl.append(int(float(place)))
+			if "TEMPERATURE           (KELVIN)" in line: 
+				temperature_place = "".join(list(line.split(":")[1])[1:4]) # can be NUL
+				if temperature_place != "NUL": 
+					temperature.append(int(float(temperature_place)))
+
+			if "PH                             : " in line: 
+				ph_place = "".join(list(line.split(":")[1])[1:4]) # can be NUL
+				if ph_place != "NUL" and ph_place != "APP" and ph_place != "HEP":  # NULL or APPROX, not sure what last means. 
+					# BUG 'HEPES 7.5'
+					# BUG '5.7-6.7'
+					ph.append(float(ph_place))
+
 		
-		if "REMARK   3   NUMBER OF REFLECTIONS             : " in line: 
-			place = "".join(list(line.split(" :")[1])[1:5])
-			if place != "NULL": 
-				refl_count.append(int(place))
+			if "RESOLUTION RANGE HIGH (ANGSTROMS) : " in line: 
+				place = "".join(list(line.split(" :")[1])[1:5])
+				res_low.append(float(place))
 
-		if "REMARK   3   PROTEIN ATOMS            : " in line: 
-			place = "".join(list(line.split(" :")[1])[1:7])
-			if place != "NULL  ": 
-				protein_atoms.append(int(place))
+			if "RESOLUTION RANGE LOW  (ANGSTROMS) : " in line: 
+				place = "".join(list(line.split(" :")[1])[1:5])
+				if place != "NULL": 
+					res_high.append(float(place))
 
+			if "REMARK   3   COMPLETENESS FOR RANGE        (%) : " in line: 
+				place = "".join(list(line.split(" :")[1])[1:5])
+				if place != "NULL": 
+					res_compl.append(int(float(place)))
+			
+			if "REMARK   3   NUMBER OF REFLECTIONS             : " in line: 
+				place = "".join(list(line.split(" :")[1])[1:5])
+				if place != "NULL": 
+					refl_count.append(int(place))
+
+			if "REMARK   3   PROTEIN ATOMS            : " in line: 
+				place = "".join(list(line.split(" :")[1])[1:7])
+				if place != "NULL  ": 
+					protein_atoms.append(int(place))
+
+		except: 
+			print("\nError at line:")
+			print(line)
 
 
 	if num > 80: num += 1900
 	else: num += 2000
 
 	date.append(num)
-	print("[%i / %i] %s"%(i+1, len(proteins), date[-1]))
+	print("\r[%i / %i] %s"%(i+1, len(proteins), date[-1]), end="")
 	
 
 fig, ax = plt.subplots(4, 4, figsize=(10, 10))
 
 num = len(proteins)
 bins = 100
+
+
+import pickle
+
+lst = [ date 		, temperature , ph 			, res_high 	, res_low 	, res_compl	, refl_count	, protein_atoms  ] 
+with open('lists.pckl', 'wb') as fp:
+    pickle.dump(lst, fp)
+
 
 #x, y = histogramify(date)
 ax[0,0].hist(date, bins=bins)#(np.max(date)-np.min(date)))
@@ -83,9 +104,10 @@ ax[0,1].hist(temperature, bins=bins)#(np.max(temperature) - np.min(temperature))
 ax[0,1].set_xlabel("Temperature [K]")
 ax[0,1].set_title("%i / %i = %.3f"%(len(temperature), num, len(temperature)/num))
 
-ax[0,2].hist(ph, bins=bins)#int(np.max(ph)*10 - np.min(ph)*10))
-ax[0,2].set_xlabel("Temperature [K]")
-ax[0,2].set_title("%i / %i = %.3f"%(len(ph), num, len(ph)/num))
+ph = np.array(ph)
+ax[0,2].hist(ph[ph<15], bins=bins)#int(np.max(ph)*10 - np.min(ph)*10))
+ax[0,2].set_xlabel("pH")
+ax[0,2].set_title("%i / %i = %.3f"%(len(ph[ph<15]), num, len(ph[ph<15])/num))
 
 
 ax[0,3].hist(protein_atoms, bins=bins)#(len(protein_atoms)))
